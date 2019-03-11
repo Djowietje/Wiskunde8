@@ -11,7 +11,18 @@ trait Planet{
   val rotation: BigTriple
   val velocity: BigTriple
   val rotationalVelocity: BigTriple
+
   private var rotationEnabled: Boolean = false
+
+  var a: Float = _
+  var e: Float = _
+  var I: Float = _
+  var L: Float = _
+  var w: Float = _
+  var o: Float = _
+  var W: Float = _
+  var M: Float = _
+  var E: Float = _
 
   def update(): Unit = {
     val timePassedSinceLastUpdate = System.currentTimeMillis() - lastUpdate

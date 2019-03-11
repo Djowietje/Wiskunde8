@@ -6,7 +6,7 @@ import processing.event.KeyEvent
 
 class Simulate extends PApplet {
 
-  var lastUpdate = System.currentTimeMillis()
+  var lastUpdate: Long = System.currentTimeMillis()
 
   override def settings() {
     size(1024, 768, PConstants.P3D)
