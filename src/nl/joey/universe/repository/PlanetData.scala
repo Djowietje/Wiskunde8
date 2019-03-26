@@ -1,6 +1,8 @@
 package nl.joey.universe.repository
 
-case class PlanetData(a0: Float,
+case class PlanetData(name:String,
+                      textY: Float,
+                      a0: Float,
                       at: Float,
                       e0: Float,
                       et: Float,
@@ -12,7 +14,7 @@ case class PlanetData(a0: Float,
                       wt: Float,
                       o0: Float,
                       ot: Float,
-                      b: Float = null,
-                      c: Float = null,
-                      s: Float = null,
-                      f: Float = null)
+                      b: Option[Float] = None,
+                      c: Option[Float] = None,
+                      s: Option[Float] = None,
+                      f: Option[Float] = None)

@@ -1,5 +1,9 @@
 package nl.joey.universe.entity
 
+import java.time.LocalDate
+import java.util.Calendar
+
+import nl.joey.universe.repository.PlanetData
 import processing.core.PApplet
 
 trait Planet{
@@ -7,12 +11,9 @@ trait Planet{
   private var lastUpdate = System.currentTimeMillis()
 
   var sizeScale: Double
-  var position: BigTriple
-  val rotation: BigTriple
-  val velocity: BigTriple
-  val rotationalVelocity: BigTriple
-
-  private var rotationEnabled: Boolean = false
+  var r: Coordinates = Coordinates.empty()
+  var recl: Coordinates = Coordinates.empty()
+  var req: Coordinates = Coordinates.empty()
 
   var a: Float = _
   var e: Float = _
@@ -24,32 +25,91 @@ trait Planet{
   var M: Float = _
   var E: Float = _
 
-  def update(): Unit = {
+  var localDate: LocalDate = LocalDate.now()
+
+  private var rotationEnabled: Boolean = false
+
+  val planetData: PlanetData
+
+
+  def update(date: LocalDate): Unit = {
     val timePassedSinceLastUpdate = System.currentTimeMillis() - lastUpdate
-    updateLocation(timePassedSinceLastUpdate)
-    if(rotationEnabled) updateRotation(timePassedSinceLastUpdate)
+    localDate = date
+    updateWithFormula(date.toEpochDay, timePassedSinceLastUpdate)
+//    if(rotationEnabled) updateRotation(timePassedSinceLastUpdate)
     lastUpdate = System.currentTimeMillis()
   }
 
-  private def updateLocation(timePassedSinceLastUpdate: Long): Unit = {
-    position.x = position.x + (velocity.x/1000 * timePassedSinceLastUpdate)
-    position.y = position.y + (velocity.y/1000 * timePassedSinceLastUpdate)
-    position.z = position.z + (velocity.z/1000 * timePassedSinceLastUpdate)
+  private def updateWithFormula(julianDayNumber: Long, deltaTime: Float): Unit = {
+    val T: Float = (julianDayNumber - 2451545) / 36525
+
+    a = planetData.a0 + (T * planetData.at * deltaTime) // Semi-Major Axis, a
+    e = planetData.e0 + (T * planetData.et * deltaTime) // Eccentricity, e
+    I = planetData.I0 + (T * planetData.It * deltaTime) // Inclination, I
+    L = planetData.L0 + (T * planetData.Lt * deltaTime) // Mean Longtitude, L
+    w = planetData.w0 + (T * planetData.wt * deltaTime) // Longtitude of Perihelion, w
+    o = planetData.o0 + (T * planetData.ot * deltaTime) // Longtitude of the ascending node, o
+
+    //2. Compute arugment of perihelion: W, and the mean anomaly, M
+    W = w - o
+
+    if(planetData.f.nonEmpty)
+      M = L - w + (planetData.b.get * Math.pow(T, 2).toFloat) + (planetData.c.get* Math.cos(planetData.f.get * T).toFloat) + (planetData.s.get * Math.sin(planetData.f.get * T).toFloat) % 180
+    else M= L - w % 180
+
+    E = CalculateEccentricAnomaly(e, M, 6)
+
+    updateCoordinates()
   }
 
-  private def updateRotation(timePassedSinceLastUpdate: Long): Unit = {
-    rotation.x = rotation.x + (rotationalVelocity.x/1000 * timePassedSinceLastUpdate)
-    rotation.y = rotation.y + (rotationalVelocity.y/1000 * timePassedSinceLastUpdate)
-    rotation.z = rotation.z + (rotationalVelocity.z/1000 * timePassedSinceLastUpdate)
+  def CalculateEccentricAnomaly(ec: Float, am: Float, dp: Float): Float = {
+    var i = 0
+    val delta = Math.pow(10, -dp).asInstanceOf[Float]
+    var E = .0
+    var F = .0
+    val maxIterations = 1000
+    E = am + Math.sin(am).asInstanceOf[Float]
+    F = E - ec * Math.sin(E).asInstanceOf[Float] - am
+    while ( {
+      (Math.abs(F) > delta) && (i < maxIterations)
+    }) {
+      F = E - ec * Math.sin(E).asInstanceOf[Float] - am
+      E = E - F / (1.0f - (ec * Math.cos(E).asInstanceOf[Float]))
+      i = i + 1
+    }
+    Math.round(E * Math.pow(10, dp).asInstanceOf[Float]).asInstanceOf[Float] / Math.pow(10, dp).asInstanceOf[Float]
+  }
+
+  def updateCoordinates(): Unit = {
+    r = Coordinates(
+      x = a * (Math.cos(E) - e).toFloat,
+      y = a * Math.sqrt(1.0f - e * e).toFloat * Math.sin(E).toFloat,
+      z = 0f )
+    recl = Coordinates(
+      x = ((Math.cos(W) * Math.cos(o)) - (Math.sin(W) * Math.sin(o) * Math.cos(I)) * r.x + ((-Math.sin(W) * Math.cos(o)) - (Math.cos(W) * Math.sin(o) * Math.cos(I))) * r.y).toFloat,
+      y = ((Math.cos(W) * Math.sin(o)) + (Math.sin(W) * Math.cos(o) * Math.cos(I)) * r.x + ((-Math.sin(W) * Math.sin(o)) + (Math.cos(W) * Math.cos(o) * Math.cos(I))) * r.y).toFloat,
+      z = ((Math.sin(W) * Math.sin(I)) * r.x + (Math.cos(W) * Math.sin(I)) * r.y).toFloat
+    )
+
+    val Ecust = 23.43928f
+    req = Coordinates(
+      x = recl.x,
+      y = recl.x + Math.cos(Ecust).toFloat * recl.y - Math.sin(Ecust).toFloat * recl.z,
+      z = recl.x + Math.sin(Ecust).toFloat * recl.y + Math.cos(Ecust).toFloat * recl.z
+    )
+  }
+
+  def drawText()(implicit window: PApplet): Unit = {
+    window.text(s"${planetData.name} = $r", 20,planetData.textY)
   }
 
   def drawPlanet()(implicit window: PApplet): Unit = {
     window.noFill()
     window.stroke(255)
-    window.translate(position.x.toFloat, position.y.toFloat, position.z.toFloat)
-    window.rotateX(rotation.x.toFloat)
-    window.rotateY(rotation.y.toFloat)
-    window.rotateZ(rotation.z.toFloat)
+    window.translate(r.x, r.y, r.z)
+//    window.rotateX(recl.x)
+//    window.rotateY(recl.y)
+//    window.rotateZ(recl.z)
     window.sphere(sizeScale.toInt*100)
   }
 
@@ -62,7 +122,7 @@ trait Planet{
   }
 
   override def toString: String = {
-    s"Planet ${super.getClass.getCanonicalName}'s location is $position"
+    s"Planet ${super.getClass.getCanonicalName}'s location is $r"
   }
 
 }
