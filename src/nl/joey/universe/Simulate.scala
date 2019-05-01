@@ -13,6 +13,10 @@ import processing.event.{KeyEvent, MouseEvent}
 
 class Simulate extends PApplet {
 
+
+  //CHECK http://www.planetaryorbits.com/tutorial-javascript-orbit-simulation.html
+
+
   var lastUpdate: Long = System.currentTimeMillis()
   var zoom: Float = 1
 
