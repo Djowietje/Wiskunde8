@@ -1,28 +1,25 @@
 package nl.joey.universe.repository
 
-import nl.joey.universe.entity._
-
 object Keplar {
 
-
-  val PLANETDATAS =   Seq(
+  val PLANETDATAS: Seq[PlanetData] = Seq(
     PlanetData( name = "Mercury",
-      textY = 40,
-      a0 =      0.38709927f,
-      at =      0.00000037f,
-      e0 =      0.20563593f,
-      et =      0.00001906f,
-      I0 =      7.00497902f,
-      It =     -0.00594749f,
-      L0 =    252.25032350f,
-      Lt = 149472.67411175f,
-      w0 =     77.45779628f,
-      wt =      0.16047689f,
-      o0 =     48.33076593f,
-      ot =     -0.12534081f),
+      textY = 60,
+      a0 =      0.38709843f,
+      at =      0.00000000f,
+      e0 =      0.20563661f,
+      et =      0.00002123f,
+      I0 =      7.00559432f,
+      It =     -0.00590158f,
+      L0 =    252.25166724f,
+      Lt = 149472.67486623f,
+      w0 =     77.45771895f,
+      wt =      0.15940013f,
+      o0 =     48.33961819f,
+      ot =     -0.12214182f),
 
     PlanetData( name = "Venus",
-      textY = 60,
+      textY = 80,
       a0 =       0.72333566f,
       at =       0.00000390f,
       e0 =       0.00677672f,
@@ -38,7 +35,7 @@ object Keplar {
 
     PlanetData( name = "Earth",
 
-      textY = 80,
+      textY = 100,
       a0 =       1.00000261f,
       at =       0.00000562f,
       e0 =       0.01671123f,
@@ -53,7 +50,7 @@ object Keplar {
       ot =              0.0f),
 
     PlanetData( name = "Mars",
-      textY = 100,
+      textY = 120,
       a0 =       1.52371034f,
       at =       0.00001847f,
       e0 =       0.09339410f,
@@ -68,7 +65,7 @@ object Keplar {
       ot =      -0.29257343f),
 
     PlanetData( name = "Jupiter",
-      textY = 120,
+      textY = 140,
       a0 =       5.20288700f,
       at =      -0.00011607f,
       e0 =       0.04838624f,
@@ -87,7 +84,7 @@ object Keplar {
       f =       Option(38.35125000f)),
 
     PlanetData( name = "Saturn",
-      textY = 140,
+      textY = 160,
       a0 =       9.53667594f,
       at =      -0.00125060f,
       e0 =       0.05386179f,
@@ -106,7 +103,7 @@ object Keplar {
       f =       Option(38.35125000f)),
 
     PlanetData( name = "Uranus",
-      textY = 160,
+      textY = 180,
       a0 =      19.18916464f,
       at =      -0.00196176f,
       e0 =       0.04725744f,
@@ -125,7 +122,7 @@ object Keplar {
       f =        Option(7.67025000f)),
 
     PlanetData( name = "Neptune",
-      textY = 180,
+      textY = 200,
       a0 =      30.06992276f,
       at =       0.00026291f,
       e0 =       0.00859048f,
@@ -144,7 +141,7 @@ object Keplar {
       f =        Option(7.67025000f)),
 
     PlanetData( name = "Pluto",
-      textY = 200,
+      textY = 220,
       a0 =       39.48211675f,
       at =       -0.00031596f,
       e0 =        0.24882730f,
@@ -160,18 +157,21 @@ object Keplar {
       b =        Option(-0.01262724f),
       c =                Option(0.0f),
       s =                Option(0.0f),
-      f =                Option(0.0f))
-  )
+      f =                Option(0.0f)),
 
-  val PLANETS:Seq[Planet] = Seq(
-    Earth,
-    Jupiter,
-    Mars,
-    Mercury,
-    Neptune,
-    Pluto,
-    Saturn,
-    Uranus,
-    Venus
+      PlanetData( name = "Sun",
+      textY = -20,
+      a0=0f,
+      at=0f,
+      e0=0f,
+      et=0f,
+      I0=0f,
+      It=0f,
+      L0=0f,
+      Lt=0f,
+      w0=0f,
+      wt=0f,
+      o0=0f,
+      ot=0f )
   )
 }
