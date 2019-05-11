@@ -25,9 +25,6 @@ object PlanetService {
     while(fv.w > 360) fv.w -= 360
     while(fv.o > 360) fv.o -= 360
 
-    if(pd.name=="Mars") println(s"Mars: $fv")
-
-
     //2. Compute arugment of perihelion: W, and the mean anomaly, M
     fv.W = fv.w - fv.o
 

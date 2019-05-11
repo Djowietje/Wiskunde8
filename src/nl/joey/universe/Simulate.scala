@@ -5,6 +5,7 @@ import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.{ChronoUnit, TemporalAmount}
 
+import nl.joey.universe.Simulate.planets
 import nl.joey.universe.entity._
 import nl.joey.universe.repository.{Keplar, PlanetData}
 import nl.joey.universe.util.Utils
@@ -15,47 +16,55 @@ class Simulate extends PApplet {
 
 
   //CHECK http://www.planetaryorbits.com/tutorial-javascript-orbit-simulation.html
-
+  implicit val window: PApplet = this
 
   var lastUpdate: Long = System.currentTimeMillis()
   var zoom: Float = 1
-
   override def settings() {
     size(1024, 768, PConstants.P3D)
-
   }
 
   override def draw(): Unit = {
-    /** Update with 60 FPS */
-    implicit val window: PApplet = this
-    if(System.currentTimeMillis() - lastUpdate < 1000 / 60 ) {
-      Thread.sleep(1000 / 60 - (System.currentTimeMillis() - lastUpdate) )
+    if(!Simulate.drawnOrbits){
+      //draw orbits once.
+      planets.filter(_.planetData.name != "Sun").foreach{planet =>
+        planet.drawOrbit(planet.calculateOrbit())
+      }
+      Simulate.drawnOrbits = true
+      println("Set DrawnOrbits to True.")
+    } else {
+      /** Update with 60 FPS */
+
+      if (System.currentTimeMillis() - lastUpdate < 1000 / 60) {
+        Thread.sleep(1000 / 60 - (System.currentTimeMillis() - lastUpdate))
+      }
+      background(0)
+      textSize(16)
+      text(s"Current FPS: ${1000 / (System.currentTimeMillis() - lastUpdate)}", 20, 20)
+      text(s"Current date: ${Simulate.dateTime} Julian Day: ${Utils.ConvertToJulianDayNumber(Simulate.dateTime)}", 20, 40)
+
+      /** Make 0,0 the center of the screen before drawing planets (for now) */
+      translate(width / 2, height / 2)
+      scale(zoom)
+      planets.foreach(_.drawPlanet(zoom))
+      //    printCamera()
+
+      lastUpdate = System.currentTimeMillis()
     }
-    background(0)
-    textSize(16)
-    text(s"Current FPS: ${1000 / (System.currentTimeMillis()-lastUpdate)}", 20, 20)
-    text(s"Current date: ${Simulate.dateTime} Julian Day: ${Utils.ConvertToJulianDayNumber(Simulate.dateTime)}",20,40)
-    Simulate.planets.foreach(_.drawText)
-
-    /** Make 0,0 the center of the screen before drawing planets (for now) */
-    translate(width/2, height/2)
-    scale(zoom)
-    Simulate.planets.foreach(_.drawPlanet(zoom))
-//    printCamera()
-
-    lastUpdate = System.currentTimeMillis()
   }
 
   override def keyPressed(event: KeyEvent): Unit = {
-//    event.getKey match {
-//      case 'r' => Earth.enableRotation()
-//    }
+    event.getKey match {
+      case 'c' => planets.foreach(_.showCoordinates=true)
+      case _ =>
+    }
   }
 
   override def keyReleased(event: KeyEvent): Unit = {
-//    event.getKey match {
-//      case 'r' => Earth.disableRotation()
-//    }
+    event.getKey match {
+      case 'c' => planets.foreach(_.showCoordinates=false)
+      case _ =>
+    }
   }
 
   override def mouseWheel(event: MouseEvent): Unit = {
@@ -70,6 +79,7 @@ object Simulate extends App {
 
   var planets: Seq[Planet] = Seq.empty
   var dateTime: LocalDateTime = _
+  var drawnOrbits: Boolean = false
 
   override def main(args: Array[String]): Unit = {
     setup()
@@ -78,14 +88,16 @@ object Simulate extends App {
 
     /** Update with 60 FPS */
     while(true) {
-      if (System.currentTimeMillis() - lastUpdate < 1000 / 60) {
-        Thread.sleep(1000 / 60 - (System.currentTimeMillis() - lastUpdate))
-        dateTime = LocalDateTime.from(dateTime).plus(1, ChronoUnit.HOURS)
-      } else {
-        planets.foreach(_.update(dateTime))
-        lastUpdate = System.currentTimeMillis()
+      if(Simulate.drawnOrbits) {
+        if (System.currentTimeMillis() - lastUpdate < 1000 / 60) {
+          Thread.sleep(1000 / 60 - (System.currentTimeMillis() - lastUpdate))
+          dateTime = LocalDateTime.from(dateTime).plus(1, ChronoUnit.HOURS)
+        } else {
+          planets.foreach(_.update(dateTime))
+          lastUpdate = System.currentTimeMillis()
 
-      }
+        }
+      } else Thread.sleep(1000)
     }
   }
 
@@ -95,7 +107,7 @@ object Simulate extends App {
       override val planetData: PlanetData = data
     })
 
-    dateTime = LocalDateTime.parse("05/05/2010:00:00", DateTimeFormatter.ofPattern("MM/dd/yyyy:HH:mm"))
+    dateTime = LocalDateTime.parse("05/05/2015:00:00", DateTimeFormatter.ofPattern("MM/dd/yyyy:HH:mm"))
   }
 
 

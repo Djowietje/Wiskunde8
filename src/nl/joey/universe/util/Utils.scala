@@ -2,6 +2,8 @@ package nl.joey.universe.util
 
 import java.time.LocalDateTime
 
+import nl.joey.universe.entity.Coordinates
+
 object Utils {
 
   def ConvertToJulianDayNumber(date: LocalDateTime): (Float, Float) = {
@@ -20,5 +22,13 @@ object Utils {
 
   def toRadians(deg:Float): Float = {
     (deg * (Math.PI/180)).toFloat
+  }
+
+  def calculateDistance(coordinates1: Coordinates, coordinates2: Coordinates): Float = {
+    val deltaX = Math.pow(coordinates1.x - coordinates2.x,2)
+    val deltaY = Math.pow(coordinates1.y - coordinates2.y,2)
+    val deltaZ = Math.pow(coordinates1.z - coordinates2.z,2)
+
+    Math.sqrt(deltaX+deltaY+deltaZ).toFloat
   }
 }
