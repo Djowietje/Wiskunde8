@@ -1,5 +1,7 @@
 package nl.joey.universe.repository
 
+import nl.joey.universe.entity.PlanetData
+
 object Keplar {
 
   val PLANETDATAS: Seq[PlanetData] = Seq(

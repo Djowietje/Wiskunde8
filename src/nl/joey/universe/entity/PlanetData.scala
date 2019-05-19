@@ -1,0 +1,20 @@
+package nl.joey.universe.entity
+
+case class PlanetData(name:String,
+                      textY: Double,
+                      a0: Double,
+                      at: Double,
+                      e0: Double,
+                      et: Double,
+                      I0: Double,
+                      It: Double,
+                      L0: Double,
+                      Lt: Double,
+                      w0: Double,
+                      wt: Double,
+                      o0: Double,
+                      ot: Double,
+                      b: Option[Double] = None,
+                      c: Option[Double] = None,
+                      s: Option[Double] = None,
+                      f: Option[Double] = None)

@@ -1,12 +1,11 @@
 package nl.joey.universe.service
 
-import nl.joey.universe.entity.{Coordinates, FormulaVariables}
-import nl.joey.universe.repository.PlanetData
+import nl.joey.universe.entity.{Coordinates, FormulaVariables, PlanetData}
 import nl.joey.universe.util.Utils.toRadians
 
 object PlanetService {
 
-  def updateVariables(julianDayNumber: Float, julianTime: Float, fv: FormulaVariables, pd: PlanetData): FormulaVariables = {
+  def updateVariables(julianDayNumber: Double, julianTime: Double, fv: FormulaVariables, pd: PlanetData): FormulaVariables = {
 //    println(s"julianDay: ${julianDayNumber - 2451545} T: ${(julianDayNumber - 2451545) / 36525}")
 
     fv.a = pd.a0 + (((julianDayNumber - 2451545) / 36525) * pd.at) + (julianTime/36525*pd.at)// Semi-Major Axis, a
@@ -30,42 +29,42 @@ object PlanetService {
 
     val T = (julianDayNumber - 2451545) / 36525
     if(pd.f.nonEmpty)
-      fv.M = fv.L - fv.w + (pd.b.get * Math.pow(T, 2).toFloat) + (pd.c.get* Math.cos(pd.f.get * T).toFloat) + (pd.s.get * Math.sin(pd.f.get * T).toFloat)
+      fv.M = fv.L - fv.w + (pd.b.get * Math.pow(T, 2)) + (pd.c.get* Math.cos(pd.f.get * T)) + (pd.s.get * Math.sin(pd.f.get * T))
     else fv.M= fv.L - fv.w
 
     while(fv.M > 360) fv.M-=360
     while(fv.M < 0) fv.M += 360
 
     fv.EccAnomaly = CalculateEccentricAnomaly(fv.e, fv.M, 7)
-    val trueAnomaly = ((Math.sqrt((1+fv.e) / (1-fv.e))) * (Math.tan(toRadians(fv.EccAnomaly)/2))).toFloat
+    val trueAnomaly = Math.sqrt((1+fv.e) / (1-fv.e)) * Math.tan(toRadians(fv.EccAnomaly)/2)
 
     val K = Math.PI/180.0
 
     if(trueAnomaly<0){
-      fv.n = (2 * (Math.atan(trueAnomaly)/K+180)).toFloat
+      fv.n = 2 * (Math.atan(trueAnomaly)/K+180)
     }
     else{
-      fv.n = (2 * (Math.atan(trueAnomaly)/K)).toFloat
+      fv.n = 2 * (Math.atan(trueAnomaly)/K)
     }
     fv
   }
 
-  def CalculateEccentricAnomaly(e: Float, M: Float, precision: Float): Float = {
-    var i = 0f
-    val precisionLimit = Math.pow(10, -precision).toFloat
-    var E = 0f
-    var F = 0f
+  def CalculateEccentricAnomaly(e: Double, M: Double, precision: Double): Double = {
+    var i = 0.0
+    val precisionLimit = Math.pow(10, -precision)
+    var E = 0.0
+    var F = 0.0
     val maxIterations = 1000
-    E = M + Math.sin(M).toFloat
-    F = E - e * Math.sin(E).toFloat - M
+    E = M + Math.sin(M)
+    F = E - e * Math.sin(E) - M
     while ( {
       (Math.abs(F) > precisionLimit) && (i < maxIterations)
     }) {
-      F = E - e * Math.sin(E).toFloat - M
-      E = E - F / (1.0f - (e * Math.cos(E).toFloat))
+      F = E - e * Math.sin(E) - M
+      E = E - F / (1.0f - (e * Math.cos(E)))
       i = i + 1
     }
-    (Math.round(E * Math.pow(10, precision)) / Math.pow(10, precision)).toFloat
+    Math.round(E * Math.pow(10, precision)) / Math.pow(10, precision)
   }
 
   def calculateCoordinates(fv:FormulaVariables): Coordinates ={
@@ -73,25 +72,25 @@ object PlanetService {
     val x = r * (Math.cos(toRadians(fv.o)) * Math.cos(toRadians(fv.n + fv.w - fv.o)) - Math.sin(toRadians(fv.o)) * Math.sin(toRadians(fv.n + fv.w - fv.o)) * Math.cos(toRadians(fv.I)))
     val y = r * (Math.sin(toRadians(fv.o)) * Math.cos(toRadians(fv.n + fv.w - fv.o)) + Math.cos(toRadians(fv.o)) * Math.sin(toRadians(fv.n + fv.w - fv.o)) * Math.cos(toRadians(fv.I)))
     val z = r * (Math.sin(toRadians(fv.n + fv.w - fv.o)) * Math.sin(toRadians(fv.I)))
-    Coordinates(x.toFloat,y.toFloat,z.toFloat)
+    Coordinates(x,y,z)
   }
 
   def calculateRCoordinates(fv: FormulaVariables): Coordinates = {
     Coordinates(
-      x = fv.a * (Math.cos(fv.EccAnomaly) - fv.e).toFloat,
-      y = (fv.a * Math.sqrt(1.0f - (fv.e * fv.e)) * Math.sin(fv.EccAnomaly)).toFloat,
+      x = fv.a * (Math.cos(fv.EccAnomaly) - fv.e),
+      y = fv.a * Math.sqrt(1.0f - (fv.e * fv.e)) * Math.sin(fv.EccAnomaly),
       z = 0f )
   }
 
   def calculateReclCoordinates(fv: FormulaVariables, r: Coordinates): Coordinates = {
     Coordinates(
-      x = ((Math.cos(fv.W) * Math.cos(fv.o)) -
+      x = (Math.cos(fv.W) * Math.cos(fv.o)) -
         (Math.sin(fv.W) * Math.sin(fv.o) * Math.cos(fv.I)) * r.x +
-        ((-Math.sin(fv.W) * Math.cos(fv.o)) - (Math.cos(fv.W) * Math.sin(fv.o) * Math.cos(fv.I))) * r.y).toFloat,
-      y = ((Math.cos(fv.W) * Math.sin(fv.o)) +
+        ((-Math.sin(fv.W) * Math.cos(fv.o)) - (Math.cos(fv.W) * Math.sin(fv.o) * Math.cos(fv.I))) * r.y,
+      y = (Math.cos(fv.W) * Math.sin(fv.o)) +
         (Math.sin(fv.W) * Math.cos(fv.o) * Math.cos(fv.I)) * r.x +
-        ((-Math.sin(fv.W) * Math.sin(fv.o)) + (Math.cos(fv.W) * Math.cos(fv.o) * Math.cos(fv.I))) * r.y).toFloat,
-      z = ((Math.sin(fv.W) * Math.sin(fv.I)) * r.x + (Math.cos(fv.W) * Math.sin(fv.I)) * r.y).toFloat
+        ((-Math.sin(fv.W) * Math.sin(fv.o)) + (Math.cos(fv.W) * Math.cos(fv.o) * Math.cos(fv.I))) * r.y,
+      z = (Math.sin(fv.W) * Math.sin(fv.I)) * r.x + (Math.cos(fv.W) * Math.sin(fv.I)) * r.y
     )
   }
 
@@ -100,8 +99,8 @@ object PlanetService {
 
     Coordinates(
       x = recl.x,
-      y = recl.x + Math.cos(Ecust).toFloat * recl.y - Math.sin(Ecust).toFloat * recl.z,
-      z = recl.x + Math.sin(Ecust).toFloat * recl.y + Math.cos(Ecust).toFloat * recl.z
+      y = recl.x + Math.cos(Ecust) * recl.y - Math.sin(Ecust) * recl.z,
+      z = recl.x + Math.sin(Ecust) * recl.y + Math.cos(Ecust) * recl.z
     )
   }
 }
