@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-import nl.joey.universe.Simulate.{dateTime, stars, planets}
+import nl.joey.universe.Simulate.{dateTime, stars, planets, paused}
 import nl.joey.universe.entity._
 import nl.joey.universe.repository.{Keplar, Stars}
 import nl.joey.universe.util.Utils
@@ -18,12 +18,27 @@ class Simulate extends PApplet {
   var lastUpdate: Long = System.currentTimeMillis()
   var zoom: Float = 1
   var visualDistanceModifier: Float = 100f
+  var cameraPositionInitialized: Boolean = false
+  var earthMode: Boolean = false
+  val defaultCam: Camera = Camera.getDefault
+  var earthCam: Camera = _
 
   override def settings() {
     size(1024, 768, PConstants.P3D)
   }
 
   override def draw(): Unit = {
+    if(!cameraPositionInitialized) {
+      setCamera(defaultCam)
+      cameraPositionInitialized = true
+    } else if(earthMode){
+      val coords = planets.find(_.planetData.name=="Earth").get.r
+      earthCam = new Camera((coords.x * 100 * zoom).toFloat, (coords.y* - 100 * zoom).toFloat, (coords.z * 100).toFloat,0,0,0,0,0,-1)
+      setCamera(earthCam)
+    }
+
+    scale(zoom)
+
     /** Update with 60 FPS */
     if (System.currentTimeMillis() - lastUpdate < 1000 / 60) {
       Thread.sleep(1000 / 60 - (System.currentTimeMillis() - lastUpdate))
@@ -31,14 +46,14 @@ class Simulate extends PApplet {
 
     background(0)
     textSize(16)
-    text(s"Current FPS: ${1000 / (System.currentTimeMillis() - lastUpdate)}", 20, 20)
-    text(s"Current date: ${dateTime} Julian Day: ${Utils.ConvertToJulianDayNumber(dateTime)}", 20, 40)
 
-    /** Make 0,0 the center of the screen before drawing planets (for now) */
-    translate(width / 2, height / 2)
-    scale(zoom)
+    //    /** Make 0,0 the center of the screen before drawing planets (for now) */
     planets.foreach(_.drawPlanet(zoom, visualDistanceModifier))
     stars.foreach(_.drawStar(zoom, visualDistanceModifier))
+
+//    println(s"Current FPS: ${1000 / (System.currentTimeMillis() - lastUpdate)}", 20, 20)
+    val julianDate = Utils.ConvertToJulianDayNumber(dateTime)
+    println(s"Current date: $dateTime Julian Day: ${julianDate._1.toInt},${(julianDate._2*1000).toInt}")
 
     lastUpdate = System.currentTimeMillis()
 
@@ -50,7 +65,10 @@ class Simulate extends PApplet {
         planets.foreach(_.showCoordinates = true)
         stars.foreach(_.showCoordinates = true)
       }
-      case 'f' => earthMode(true)
+      case 'f' => {
+        earthMode = !earthMode
+        if(!earthMode) setCamera(defaultCam)
+      }
       case _ =>
     }
   }
@@ -60,9 +78,8 @@ class Simulate extends PApplet {
       case 'c' => {
         planets.foreach(_.showCoordinates = false)
         stars.foreach(_.showCoordinates = false)
-
       }
-      case 'f' => earthMode(false)
+      case 'p' => paused = !paused
       case _ =>
     }
   }
@@ -74,12 +91,12 @@ class Simulate extends PApplet {
     }
   }
 
-  def earthMode(activate: Boolean): Unit = {
-    if(activate){
-      val coords = planets.find(_.planetData.name=="Earth").get.r
-      camera((coords.x * 100).toFloat, (coords.y* - 100).toFloat, (coords.z * 100).toFloat,0f,0f,0f,0f,0f,100f)
-      printCamera()
-    }
+  def setCamera(cam: Camera): Unit = {
+    camera(
+      cam.eyePos.x.toFloat,cam.eyePos.y.toFloat,cam.eyePos.z.toFloat,
+      cam.lookAt.x.toFloat, cam.lookAt.y.toFloat, cam.lookAt.z.toFloat,
+      cam.up.x.toFloat, cam.up.y.toFloat, cam.up.z.toFloat
+    )
   }
 }
 
@@ -88,6 +105,7 @@ object Simulate extends App {
   var planets: Seq[Planet] = Seq.empty
   var stars: Seq[Star] = Seq.empty
   var dateTime: LocalDateTime = _
+  var paused: Boolean = false
 
   override def main(args: Array[String]): Unit = {
     setup()
@@ -98,7 +116,7 @@ object Simulate extends App {
     while (true) {
       if (System.currentTimeMillis() - lastUpdate < 1000 / 60) {
         Thread.sleep(1000 / 60 - (System.currentTimeMillis() - lastUpdate))
-        dateTime = LocalDateTime.from(dateTime).plus(1, ChronoUnit.HOURS)
+        if(!paused) dateTime = LocalDateTime.from(dateTime).plus(1, ChronoUnit.HOURS)
       } else {
         planets.foreach(_.update(dateTime))
         lastUpdate = System.currentTimeMillis()

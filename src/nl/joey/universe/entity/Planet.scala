@@ -50,9 +50,7 @@ class Planet(val planetData: PlanetData) {
     window.scale(1/scale)
     window.text(s"${planetData.name}",1,1)
     if(showCoordinates) {
-      window.scale(0.5f)
       window.text(s"X:${r.x}\nY:${r.y}\nZ:${r.z}", 140, 1)
-      window.scale(2f)
     }
     window.scale(scale)
     window.sphere(sizeScale.toInt)
@@ -94,6 +92,7 @@ class Planet(val planetData: PlanetData) {
   def drawOrbit(orbit: List[(Coordinates, Coordinates)], visualDistanceModifier: Float)(implicit window: PApplet): Unit ={
     for((coord1, coord2) <- orbit){
       window.stroke(60)
+      window.strokeWeight(5)
       window.line(
         (coord1.x*visualDistanceModifier).toFloat,
         (coord1.y*visualDistanceModifier * -1).toFloat,

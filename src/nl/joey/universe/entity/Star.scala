@@ -15,11 +15,9 @@ class Star(starData: StarData) {
     window.scale(1/scale)
     window.text(s"${starData.name}",1,1)
     if(showCoordinates) {
-      window.scale(0.5f)
       window.text(s"X:${coords.x}\nY:${coords.y}\nZ:${coords.z}", 140, 1)
-      window.scale(2f)
     }
-    window.sphere(5)
+    window.sphere(1)
     window.scale(scale)
     window.translate((coords.x * -visualDistanceModifier).toFloat, (coords.y * visualDistanceModifier).toFloat, (coords.z * -visualDistanceModifier).toFloat)
   }
